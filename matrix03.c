@@ -25,11 +25,11 @@ double **malloc_matrix(int N){
 	}
 	return mat1;
 }
-//行列のノードをランダムな値で埋める
+//行列要素をrand() % 10で初期化
 void rand_matrix(double **D, int N){
 	for(int i = 0; i < N; i++){
 		for(int j = 0; j < N; j++){
-			D[i][j] = rand();
+			D[i][j] = (double)(rand() % 10);
 		}
 	}
 }
