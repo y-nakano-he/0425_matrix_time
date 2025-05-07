@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#define N 1000
+
 
 /*****************************************
 *malloc_matrix関数：行列のメモリを確保する	*
@@ -9,7 +9,7 @@
 *→配列mat1[N]1行分のメモリ領域を確保		*
 ******************************************/
 
-double **malloc_matrix1(){
+double **malloc_matrix1(int N){
 	//double* mat1はmat1[0]を指す  
 	double **mat1 = malloc(N * sizeof(*mat1));
 	if(mat1 == NULL){
@@ -25,17 +25,8 @@ double **malloc_matrix1(){
 	}
 	return mat1;
 }
-double *malloc_matrix2(){
-	//double* mat2はmat2[0]を指す
-	double *mat2 = malloc(sizeof(*mat2[i] * N * N));
-	if(mat2 == NULL){
-		printf("Memory not allocated.\n");
-		exit(8);
-	}
-	return mat2;
-}
 //mat1要素をrand() % 10で初期化
-void rand_matrix(double **mat){
+void rand_matrix(double **mat, int N){
 	for(int i = 0; i < N; i++){
 		for(int j = 0; j < N; j++){
 			mat[i][j] = (double)(rand() % 10);
@@ -43,137 +34,129 @@ void rand_matrix(double **mat){
 	}
 }
 //結果を格納する行列Cの初期化
-void zero_matrix(double **E){
+void zero_matrix(double **mat, int N){
 	for(int i = 0; i < N; i++){
 		for(int j = 0; j < N; j++){
-			E[i][j] = 0.0;
+			mat[i][j] = 0.0;
 		}
 	}
 }
 //matrix_ijk：N*Nの行列の乗算を行う i->j->k
-void matrix_ijk(double **A, double **B, double **C){
+void matrix_ijk(double **m1, double **m2, double **m3, int N){
 	//i->j->kでループ
 	for(int i = 0; i < N; i++){
 		for(int j = 0; j < N;j++){
 			for(int k = 0; k < N; k++){
-				double cij += A[i][k] * B[k][j];
+				double cij = 0.0;
+				cij += m1[i][k] * m2[k][j];
 			}
-			C[i][j] = cij;
+			m3[i][j] = cij;
 		}
 	}
 }
 //matrix_kij：N*Nの行列の乗算を行う k->i->j
-void matrix_kij(double **A, double **B, double **C){
+void matrix_kij(double **m1, double **m2, double **m3, int N){
 	//k→i→jでループ
 	for(int k = 0; k < N; k++){
 		for(int i = 0; i < N; i++){
-			double aik = A[i][k];
+			double aik = m1[i][k];
 			for(int j = 0; j < N; j++){
-				C[i][j] += aik * B[k][j];
+				m3[i][j] += aik * m2[k][j];
 			}
 		}		
 	}
 }
 //matrix_ikj：N*Nの行列の乗算を行う i->k->j
-void matrix_ikj(double **A, double **B, double **C){
+void matrix_ikj(double **m1, double **m2, double **m3, int N){
 	//i->j->kでループ
 	for(int i = 0; i < N; i++){
 		for(int k = 0; k < N;k++){
-			double aik = A[i][k];
+			double aik = m1[i][k];
 			for(int j = 0; j < N; j++){
-				C[i][j] += aik * B[k][j];
+				m3[i][j] += aik * m2[k][j];
 			}
 		}		
 	}
 }
 //matrix_jik：N*Nの行列の乗算を行う j->i->k
-void matrix_jik(double **A, double **B, double **C){
+void matrix_jik(double **m1, double **m2, double **m3, int N){
 	//j->i->kでループ
 	for(int j = 0; j < N; j++){
 		for(int i = 0; i < N;i++){
 			for(int k = 0; k < N; k++){
-				double cij += A[i][k] * B[k][j];
+				double cij += m1[i][k] * m2[k][j];
 			}
-			C[i][j] = cij;
+			m3[i][j] = cij;
 		}		
 	}
 }
 //matrix_jki：N*Nの行列の乗算を行う j->k->i
-void matrix_jki(double **A, double **B, double **C){
+void matrix_jki(double **m1, double **m2, double **m3, int N){
 	//j->k->iでループ
 	for(int j = 0; j < N; j++){
 		for(int k = 0; k < N;k++){
-			double bkj = B[k][j];
+			double bkj = mat2[k][j];
 			for(int i = 0; i < N; i++){
-				C[i][j] += A[i][k] * bkj;
+				mat3[i][j] += mat1[i][k] * bkj;
 			}
 		}		
 	}
 }
 //matrix_kji：N*Nの行列の乗算を行う k->j->i
-void matrix_kji(double **A, double **B, double **C){
+void matrix_kji(double **m1, double **m2, double **m3, int N){
 	//k->j->iでループ
 	for(int k = 0; k < N; k++){
 		for(int j = 0; j < N;j++){
-			double bkj = B[k][j];
+			double bkj = m2[k][j];
 			for(int i = 0; i < N; i++){
-				C[i][j] += A[i][k] * bkj;
+				m3[i][j] += m1[i][k] * bkj;
 			}
 		}		
 	}
 }
 
 //確保したmat1を解放
-void free_matrix1(double **mat){
+void free_matrix1(double **mat, int N){
 	for(int i = 0; i < N; i++){
 		free(mat[i]);
 	}
-	free(mat1);
-}
-//確保したmat2を解放
-void free_matrix2(double *mat){
-	for(int i = 0; i < N; i++){
-		free(mat[i]);
-	}
-	free(mat2);
+	free(mat);
 }
 
 int main(){
-	//mallocで行列を確保して作成
-	double **A = malloc_matrix1();
-	double **B = malloc_matrix1();
-	double **C = malloc_matrix1();
+	void (*funcarray[])(double**, double**, double**, int) = {matrix_ijk, matrix_ikj, matrix_jik, matrix_jki, matrix_kij, matrix_kji};
+	FILE *fp = fopen("2dmatrix_product_time.csv", "w");
+	if(fp == NULL) {
+		printf("fopen failed");
+		exit(8);
+	}
+	fprintf(fp, "N,method,time_sec\n");
 
-	//確保した型と領域に要素を挿入していく
-	rand_matrix(A);
-	rand_matrix(B);
+	for(int N = 1000; N <= 10000; N += 1000){
+		printf("\nMatrix size: %d\n", N);
+		//mallocで行列を確保して作成
+		double **A = malloc_matrix1(N);
+		double **B = malloc_matrix1(N);
+		double **C = malloc_matrix1(N);
 
-	//Cを初期化
-	zero_matrix(C);
+		rand_matrix(A, N);
+		rand_matrix(B, N);
 
-	//行列演算のCPU時間を測定
-	clock_t begin1 = clock();
-	matrix_product1(A, B, C);
-	clock_t end1 = clock();
+		for(int i = 0; i < 6; i++){
+			zero_matrix(C, N);
+			struct timespec begin, end;
+			clock_gettime(CLOCK_MONOTONIC, &begin);
+			funcarray[i](A, B, C, N);
+			clock_gettime(CLOCK_MONOTONIC, &end);
+			double matrix_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
-	//Cを初期化
-	zero_matrix(C);
-
-	//行列演算のCPU時間を測定
-	clock_t begin2 = clock();
-	matrix_product2(A, B, C);
-	clock_t end2 = clock();
-
-
-	//確保した領域を解放
-	free_matrix1(A);
-	free_matrix1(B);
-	free_matrix1(C);
-
-	//計測時間の表示
-	printf("ijk time = %lf sec\n", (double)(end1 - begin1) / CLOCKS_PER_SEC);
-	printf("kij time = %lf sec\n", (double)(end2 - begin2) / CLOCKS_PER_SEC);
-
+			fprintf(fp, "%d,%s,%.6f\n",N, funcarray[i], matrix_time);
+		}
+		for(int i = 0; i < N; i++){ free(A[i]); free(C[i]); }
+		free(A); free(B); free(C);
+	}
+	
+	fclose(fp);
 	return 0;
-}	
+}
 	
