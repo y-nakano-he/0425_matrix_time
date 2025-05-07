@@ -35,10 +35,10 @@ double *malloc_matrix2(){
 	return mat2;
 }
 //mat1要素をrand() % 10で初期化
-void rand_matrix(double **D){
+void rand_matrix(double **mat){
 	for(int i = 0; i < N; i++){
 		for(int j = 0; j < N; j++){
-			D[i][j] = (double)(rand() % 10);
+			mat[i][j] = (double)(rand() % 10);
 		}
 	}
 }
@@ -122,18 +122,7 @@ void matrix_kji(double **A, double **B, double **C){
 		}		
 	}
 }
-//matrix_a[iNj]：1次元配列 i→j
-void matrix_kji(double **A, double **B, double **C){
-	//k->j->iでループ
-	for(int k = 0; k < N; k++){
-		for(int j = 0; j < N;j++){
-			double bkj = B[k][j];
-			for(int i = 0; i < N; i++){
-				C[i][j] += A[i][k] * bkj;
-			}
-		}		
-	}
-}
+
 //確保したmat1を解放
 void free_matrix1(double **mat){
 	for(int i = 0; i < N; i++){
