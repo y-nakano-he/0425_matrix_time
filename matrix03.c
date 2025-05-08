@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <time.h>
 
+typedef struct {
+	char* name;
+	void (*func)(double**, double**, double**, int);
+} MethodEntry;
 
 /*****************************************
 *malloc_matrix関数：行列のメモリを確保する	*
@@ -58,9 +62,9 @@ void matrix_ikj(double **m1, double **m2, double **m3, int N){
 	//i->j->kでループ
 	for(int i = 0; i < N; i++){
 		for(int k = 0; k < N;k++){
-			double 1ik = m1[i][k];
+			double  m1ik = m1[i][k];
 			for(int j = 0; j < N; j++){
-				m3[i][j] += 1ik * m2[k][j];
+				m3[i][j] +=  m1ik * m2[k][j];
 			}
 		}		
 	}
@@ -83,9 +87,9 @@ void matrix_jki(double **m1, double **m2, double **m3, int N){
 	//j->k->iでループ
 	for(int j = 0; j < N; j++){
 		for(int k = 0; k < N;k++){
-			double 2kj = m2[k][j];
+			double m2kj = m2[k][j];
 			for(int i = 0; i < N; i++){
-				m3[i][j] += m1[i][k] * 2kj;
+				m3[i][j] += m1[i][k] * m2kj;
 			}
 		}		
 	}
@@ -95,9 +99,9 @@ void matrix_kij(double **m1, double **m2, double **m3, int N){
 	//k→i→jでループ
 	for(int k = 0; k < N; k++){
 		for(int i = 0; i < N; i++){
-			double 1ik = m1[i][k];
+			double  m1ik = m1[i][k];
 			for(int j = 0; j < N; j++){
-				m3[i][j] += 1ik * m2[k][j];
+				m3[i][j] +=  m1ik * m2[k][j];
 			}
 		}		
 	}
@@ -108,9 +112,9 @@ void matrix_kji(double **m1, double **m2, double **m3, int N){
 	//k->j->iでループ
 	for(int k = 0; k < N; k++){
 		for(int j = 0; j < N;j++){
-			double 2kj = m2[k][j];
+			double m2kj = m2[k][j];
 			for(int i = 0; i < N; i++){
-				m3[i][j] += m1[i][k] * 2kj;
+				m3[i][j] += m1[i][k] * m2kj;
 			}
 		}		
 	}
@@ -125,8 +129,15 @@ void free_matrix1(double **mat, int N){
 }
 
 int main(){
-	//ループ用に関数ポインタ配列を作成
-	void (*funcarray[])(double**, double**, double**, int) = {matrix_ijk, matrix_ikj, matrix_jik, matrix_jki, matrix_kij, matrix_kji};
+	//ループ出力するために関数とラベルの構造体配列を作成
+	MethodEntry methods[] = {
+		{"matrix_ijk", matrix_ijk},
+		{"matrix_ikj", matrix_ikj},
+		{"matrix_jik", matrix_jik},
+		{"matrix_jki", matrix_jki},
+		{"matrix_kij", matrix_kij},
+		{"matrix_kji", matrix_kji}
+	};
 	FILE *fp = fopen("2dmatrix_product_time.csv", "w");
 	if(fp == NULL) {
 		printf("fopen failed");
@@ -148,14 +159,15 @@ int main(){
 			zero_matrix(C, N);
 			struct timespec start, end;
 			clock_gettime(CLOCK_MONOTONIC, &start);
-			funcarray[i](A, B, C, N);
+			methods[i].func(A, B, C, N);
 			clock_gettime(CLOCK_MONOTONIC, &end);
 			double matrix_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
-			fprintf(fp, "%d,%s,%.6f\n",N, funcarray[i], matrix_time);
+			fprintf(fp, "%d,%s,%.6f\n",N, methods[i].name, matrix_time);
 		}
-		for(int i = 0; i < N; i++){ free(A[i]); free(C[i]); }
-		free(A); free(B); free(C);
+		free_matrix1(A, N);
+		free_matrix1(B, N);
+		free_matrix1(C, N);	
 	}
 	
 	fclose(fp);
